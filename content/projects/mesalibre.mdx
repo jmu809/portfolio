@@ -10,7 +10,7 @@ solution: "Arquitectura de 3 capas: Nginx como balanceador round-robin sobre nod
 results: "5.000 usuarios simultáneos con 0 errores en pruebas de carga. Al pasar de 1 a 3 réplicas tras Nginx, la latencia mediana (p50) cayó de 265ms a 27ms (−90%). 26.365 restaurantes reales de OpenStreetMap en 12 ciudades, actualizados cada 10 segundos."
 repoUrl: "https://github.com/jmu809/MesaLibre"
 demoUrl: ""
-coverImage: "/projects/mesalibre-diagram.png"
+coverImage: "/projects/mesalibre-app.png"
 featured: true
 date: "2026-06-04"
 ---
@@ -30,6 +30,8 @@ El sistema separa claramente tres capas:
 Un "merge endpoint" combina ambas fuentes en cada petición: MongoDB aporta los datos fríos (nombre, dirección, ubicación) y Redis los datos calientes (mesas libres/ocupadas), relacionados por el `_id` del restaurante.
 
 Para demostrar el escalado también se desplegó en Kubernetes con autoscaling horizontal (HPA) entre 2 y 10 réplicas según CPU.
+
+![Modelo de datos e integración de MesaLibre: MongoDB, Redis y el merge endpoint](/projects/mesalibre-diagram.png)
 
 ## Resultados de rendimiento
 
