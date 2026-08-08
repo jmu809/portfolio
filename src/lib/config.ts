@@ -1,21 +1,25 @@
 export const siteConfig = {
   url: "https://tu-dominio.com",
-  name: "Tu Nombre",
-  role: "Ingeniero Informático · Big Data & IA",
+  name: "Juan Rafael Madolell",
+  photo: "/profile.jpeg",
+  location: "Almería, España",
+  role: "Ingeniero Informático · Data Analyst & Big Data",
   tagline:
-    "Construyo soluciones de datos e IA, desde el máster hasta proyectos propios.",
+    "Data Analyst en banca especializado en calidad y gobierno de datos, cursando el máster en Big Data y preparando la certificación Azure AI Engineer Associate.",
   description:
-    "Portfolio de proyectos de Big Data, Machine Learning e ingeniería de software.",
-  email: "tu@email.com",
+    "Portfolio de Juan Rafael Madolell — Ingeniero Informático especializado en Big Data, análisis de datos e IA.",
+  email: "jrmu700@gmail.com",
+  phone: "+34 652 99 82 38",
   social: {
     github: "https://github.com/tu-usuario",
-    linkedin: "https://linkedin.com/in/tu-usuario",
+    linkedin: "https://linkedin.com/in/JuanRafaelMadolell",
   },
   cvUrl: "/cv.pdf",
   highlights: [
     "Ingeniero Informático",
+    "Data Analyst en BCC",
     "Máster en Big Data (en curso)",
-    "Certificaciones de IA en preparación",
+    "Preparando Azure AI Engineer Associate (AI-102)",
   ],
 };
 

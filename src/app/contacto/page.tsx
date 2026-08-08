@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Mail } from "lucide-react";
+import { Mail, MapPin, Phone } from "lucide-react";
 import { siteConfig } from "@/lib/config";
 import { GithubIcon, LinkedinIcon } from "@/components/icons";
 
@@ -23,6 +23,20 @@ export default function ContactoPage() {
         <Mail className="h-4 w-4" />
         {siteConfig.email}
       </a>
+
+      <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-muted">
+        <a
+          href={`tel:${siteConfig.phone.replace(/\s+/g, "")}`}
+          className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground"
+        >
+          <Phone className="h-4 w-4" />
+          {siteConfig.phone}
+        </a>
+        <span className="inline-flex items-center gap-1.5">
+          <MapPin className="h-4 w-4" />
+          {siteConfig.location}
+        </span>
+      </div>
 
       <div className="mt-10 flex items-center gap-4 text-muted">
         <a

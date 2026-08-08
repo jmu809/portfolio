@@ -10,17 +10,31 @@ export type Certification = {
 
 export const certifications: Certification[] = [
   {
-    name: "[Ejemplo] AWS Certified Machine Learning – Specialty",
-    issuer: "Amazon Web Services",
+    name: "Azure AI Engineer Associate (AI-102)",
+    issuer: "Microsoft",
     status: "en-curso",
-    date: "Prevista: 2026",
+    date: "En preparación",
     credentialUrl: "",
   },
   {
-    name: "[Ejemplo] Certificación obtenida",
-    issuer: "Emisor de la certificación",
+    name: "Network Security",
+    issuer: "Cisco Networking Academy",
     status: "obtenida",
-    date: "2025",
+    date: "2026",
+    credentialUrl: "",
+  },
+  {
+    name: "Introducción al uso de inteligencia artificial generativa",
+    issuer: "Universidad de Almería",
+    status: "obtenida",
+    date: "2024",
+    credentialUrl: "",
+  },
+  {
+    name: "Power BI: de cero a experto",
+    issuer: "Microsoft SQL Server / Power BI",
+    status: "obtenida",
+    date: "2024",
     credentialUrl: "",
   },
 ];

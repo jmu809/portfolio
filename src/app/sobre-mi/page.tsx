@@ -12,7 +12,9 @@ export default function SobreMiPage() {
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
       <h1 className="text-3xl font-semibold tracking-tight">Sobre mí</h1>
-      <p className="mt-2 text-muted">{siteConfig.role}</p>
+      <p className="mt-2 text-muted">
+        {siteConfig.role} · {siteConfig.location}
+      </p>
 
       <div className="mt-8 space-y-4 text-base leading-relaxed">
         {bio.split("\n\n").map((paragraph) => (
