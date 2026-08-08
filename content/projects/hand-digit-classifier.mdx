@@ -1,0 +1,64 @@
+---
+title: "Hand Digit Classifier — CNN entrenada desde cero"
+slug: "hand-digit-classifier"
+domain: ["Machine Learning / IA", "Big Data"]
+origin: "Personal"
+stack: ["Python", "TensorFlow/Keras", "PySpark", "OpenCV", "MediaPipe", "scikit-learn", "Docker"]
+summary: "Clasificador que detecta cuántos dedos muestra una mano (1 a 5) con una CNN entrenada desde cero sobre esqueletos de mano generados con MediaPipe, con inferencia en tiempo real por cámara."
+problem: "Clasificar en tiempo real cuántos dedos muestra una mano evitando que el modelo aprenda variables irrelevantes (piel, iluminación, fondo) en vez de la geometría real de la mano."
+solution: "Pipeline completo en Docker: PySpark carga el dataset y hace un split estratificado 70/15/15, una CNN VGG-style entrenada desde cero (GlobalAveragePooling2D, BatchNorm, SpatialDropout2D, label smoothing) con Keras, y un script de inferencia en tiempo real que usa MediaPipe para detectar los 21 landmarks de la mano y normalizarlos exactamente igual que en el entrenamiento."
+results: "96.28% de accuracy y F1 macro de 0.9579 en el test set. Solo la clase de 3 dedos (la más ambigua visualmente) baja de F1 0.89; el resto supera 0.95."
+repoUrl: "https://github.com/jmu809/hand-digit-classifier"
+demoUrl: ""
+coverImage: "/projects/hand-digit-confusion-matrix.png"
+featured: true
+date: "2026-08-08"
+---
+
+## Contexto
+
+Proyecto personal de deep learning para clasificar cuántos dedos (1 a 5) muestra una mano frente a una cámara, en tiempo real. El objetivo no era solo entrenar un modelo con buena accuracy, sino construir el pipeline completo: desde el preprocesado distribuido de datos hasta la inferencia en vivo.
+
+## Un dataset de esqueletos, no de fotos
+
+En vez de entrenar sobre fotos de manos en crudo, el dataset son **esqueletos dibujados** (huesos en rojo, articulaciones en azul) generados a partir de los 21 landmarks de mano que detecta MediaPipe:
+
+![Ejemplo de esqueleto de mano normalizado usado como entrada del modelo](/projects/hand-digit-skeleton-sample.png)
+
+Entrenar sobre el esqueleto en vez de la foto elimina variables que no aportan a la tarea (piel, iluminación, fondo) y deja solo la geometría de la mano. Cada esqueleto se centra en la muñeca, se escala a una caja de 160px y se dibuja en un lienzo de 224×224 — exactamente la misma transformación que se aplica en tiempo real sobre los landmarks detectados por la cámara, para que el modelo reciba siempre imágenes del mismo dominio en el que fue entrenado.
+
+## Pipeline
+
+```
+Imagenes Normalizadas/ (dataset)
+        │
+        ▼
+01_preprocess.py (PySpark)     → split estratificado 70/15/15
+        │
+        ▼
+02_train.py (TensorFlow/Keras) → entrena la CNN con augmentación y pesos de clase
+        │
+        ▼
+03_evaluate.py (sklearn)       → matriz de confusión, curvas y métricas por clase
+        │
+        ▼ (fuera de Docker, con cámara)
+04_realtime.py (OpenCV + MediaPipe) → inferencia en vivo
+```
+
+Todo el entrenamiento corre en Docker Compose, incluido un mini-cluster Spark (`spark-master` + 2 `spark-worker`) para el preprocesado distribuido.
+
+## Arquitectura de la CNN
+
+Red VGG-style entrenada **desde cero** (sin transfer learning), con cuatro bloques de doble convolución, `GlobalAveragePooling2D` en vez de `Flatten` para reducir el sobreajuste, `SpatialDropout2D` como regularización espacial, y `label smoothing` para evitar que el modelo sea demasiado confiado.
+
+## Resultados
+
+![Curvas de accuracy y loss durante el entrenamiento](/projects/hand-digit-training-curves.png)
+
+- **96.28% de accuracy** y **F1 macro de 0.9579** en el test set.
+- La única clase por debajo de F1 0.90 es "3 dedos" (0.89), la más ambigua visualmente incluso para un humano.
+- `ReduceLROnPlateau` + `EarlyStopping` con paciencia amplia (50 epochs) para dejar que el modelo saliera de mesetas sin cortar el entrenamiento demasiado pronto.
+
+## Aprendizajes
+
+La parte más interesante no fue la CNN en sí, sino diseñar la representación de entrada (esqueleto en vez de foto) para eliminar ruido del problema antes de que llegara al modelo, y mantener esa misma normalización de forma idéntica entre entrenamiento e inferencia en tiempo real — un desajuste ahí habría arruinado la demo aunque el modelo fuera bueno en test.
