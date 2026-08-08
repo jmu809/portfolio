@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
@@ -80,6 +81,18 @@ export default async function ProjectPage({
           </a>
         )}
       </div>
+
+      {project.coverImage && (
+        <div className="mt-8 overflow-hidden rounded-2xl border border-border">
+          <Image
+            src={project.coverImage}
+            alt={project.title}
+            width={1200}
+            height={752}
+            className="w-full"
+          />
+        </div>
+      )}
 
       <dl className="mt-10 grid gap-6 border-t border-border pt-8 sm:grid-cols-3">
         <div>

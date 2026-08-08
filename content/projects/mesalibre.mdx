@@ -1,0 +1,44 @@
+---
+title: "MesaLibre — Aforo de restaurantes en tiempo real"
+slug: "mesalibre"
+domain: ["Data Engineering", "Big Data", "Cloud"]
+origin: "Master"
+stack: ["Node.js", "Express", "MongoDB", "Redis", "Docker", "Kubernetes", "Nginx"]
+summary: "Mapa en tiempo real del aforo de restaurantes en 12 ciudades españolas, con una arquitectura híbrida MongoDB + Redis escalable horizontalmente."
+problem: "Servir consultas geoespaciales sobre miles de restaurantes reales a múltiples usuarios concurrentes con latencias bajas, y demostrar que la arquitectura escala horizontalmente añadiendo nodos sin tocar código."
+solution: "Arquitectura de 3 capas: Nginx como balanceador round-robin sobre nodos de API Express sin estado, MongoDB con índices geoespaciales 2dsphere para datos persistentes, y Redis para el aforo en tiempo real actualizado cada 10s. Desplegable con Docker Compose o con Kubernetes (autoscaling HPA entre 2 y 10 réplicas)."
+results: "5.000 usuarios simultáneos con 0 errores en pruebas de carga. Al pasar de 1 a 3 réplicas tras Nginx, la latencia mediana (p50) cayó de 265ms a 27ms (−90%). 26.365 restaurantes reales de OpenStreetMap en 12 ciudades, actualizados cada 10 segundos."
+repoUrl: "https://github.com/jmu809/MesaLibre"
+demoUrl: ""
+coverImage: "/projects/mesalibre-diagram.png"
+featured: true
+date: "2026-06-04"
+---
+
+## Contexto
+
+MesaLibre es un proyecto académico del máster en Big Data centrado en el diseño de bases de datos, no en el frontend: una app que muestra en un mapa el aforo de restaurantes en tiempo real, pensada para demostrar que una arquitectura de datos bien diseñada puede servir miles de peticiones concurrentes con latencias de milisegundos y escalar horizontalmente sin cambiar una línea de código.
+
+## Arquitectura
+
+El sistema separa claramente tres capas:
+
+- **Balanceo**: Nginx reparte peticiones en round-robin entre los nodos de API disponibles.
+- **Aplicación**: instancias idénticas de Express, completamente *stateless*, lo que permite escalarlas horizontalmente sin coordinación entre ellas.
+- **Datos**: MongoDB para los datos persistentes (con un índice compuesto `city + location: 2dsphere` para las consultas geoespaciales) y Redis como caché en memoria para el aforo, que cambia cada 10 segundos.
+
+Un "merge endpoint" combina ambas fuentes en cada petición: MongoDB aporta los datos fríos (nombre, dirección, ubicación) y Redis los datos calientes (mesas libres/ocupadas), relacionados por el `_id` del restaurante.
+
+Para demostrar el escalado también se desplegó en Kubernetes con autoscaling horizontal (HPA) entre 2 y 10 réplicas según CPU.
+
+## Resultados de rendimiento
+
+Con pruebas de estrés (autocannon, 500 conexiones concurrentes) y un test de uso realista (5.000 usuarios simulados, 1 petición cada 10s):
+
+- Throughput similar entre 1 y 3 réplicas, pero la **latencia mediana cayó un 90%** (265ms → 27ms) al repartir la carga con Nginx.
+- **0 errores** en todos los escenarios, incluido el de 5.000 usuarios simultáneos — el sistema degrada la latencia de forma gradual en vez de colapsar.
+- El límite práctico en un portátil se sitúa entre 5.000 y 10.000 usuarios simultáneos; en cloud con nodos dedicados y Kubernetes, ese límite escala con el número de réplicas.
+
+## Aprendizajes
+
+El reto principal no fue construir el mapa, sino justificar cada decisión de base de datos: por qué MongoDB para datos geoespaciales (soporte nativo de GeoJSON e índices `2dsphere`), por qué Redis para el aforo (lecturas/escrituras en memoria, sin necesidad de persistencia), y cómo diseñar el índice compuesto pensando en una futura estrategia de sharding por ciudad.
