@@ -1,5 +1,5 @@
 export const siteConfig = {
-  url: "https://tu-dominio.com",
+  url: "https://portfolio-jrmu.vercel.app",
   name: "Juan Rafael Madolell",
   photo: "/profile.jpeg",
   location: "Almería, España",
@@ -11,7 +11,7 @@ export const siteConfig = {
   email: "jrmu700@gmail.com",
   phone: "+34 652 99 82 38",
   social: {
-    github: "https://github.com/tu-usuario",
+    github: "https://github.com/jmu809",
     linkedin: "https://linkedin.com/in/JuanRafaelMadolell",
   },
   cvUrl: "/cv.pdf",
