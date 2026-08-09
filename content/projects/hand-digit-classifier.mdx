@@ -10,7 +10,7 @@ solution: "Pipeline completo en Docker: PySpark carga el dataset y hace un split
 results: "96.28% de accuracy y F1 macro de 0.9579 en el test set. Solo la clase de 3 dedos (la más ambigua visualmente) baja de F1 0.89; el resto supera 0.95."
 repoUrl: "https://github.com/jmu809/hand-digit-classifier"
 demoUrl: ""
-coverImage: "/projects/hand-digit-confusion-matrix.png"
+coverImage: "/projects/hand-digit-cover.png"
 featured: true
 date: "2026-08-08"
 ---
@@ -69,6 +69,8 @@ Red VGG-style entrenada **desde cero** (sin transfer learning), con cuatro bloqu
 ## Resultados
 
 ![Curvas de accuracy y loss durante el entrenamiento](/projects/hand-digit-training-curves.png)
+
+![Matrices de confusión sobre el test set](/projects/hand-digit-confusion-matrix.png)
 
 - **96.28% de accuracy** y **F1 macro de 0.9579** en el test set.
 - La única clase por debajo de F1 0.90 es "3 dedos" (0.89), la más ambigua visualmente incluso para un humano.
