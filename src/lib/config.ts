@@ -1,7 +1,7 @@
 export const siteConfig = {
   url: "https://portfolio-jrmu.vercel.app",
   name: "Juan Rafael Madolell",
-  photo: "/profile.jpeg",
+  photo: "/profile.jpg",
   location: "Almería, España",
   role: "Ingeniero Informático · Data Analyst & Big Data",
   tagline:
