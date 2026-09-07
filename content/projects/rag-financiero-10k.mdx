@@ -1,0 +1,66 @@
+---
+title: "RAG Financiero (10-K) — Consulta de informes SEC en lenguaje natural"
+slug: "rag-financiero-10k"
+domain: ["Machine Learning / IA"]
+origin: "Personal"
+stack: ["Python", "LangChain", "ChromaDB", "Sentence Transformers", "Google Gemini", "Streamlit", "pypdf"]
+summary: "Sistema RAG sobre informes anuales 10-K de la SEC que responde preguntas en lenguaje natural — riesgos, resultados, comparativas entre empresas — citando siempre el documento, la página y la sección exactos."
+problem: "Los informes 10-K son documentos de cientos de páginas con un inglés denso y muy formulario. Leerlos enteros o hacer búsquedas por palabra clave no escala cuando quieres comparar riesgos o resultados entre varias empresas."
+solution: "Pipeline RAG con chunking por página (650 tokens, overlap 100) para que las citas sean exactas, embeddings multilingües (sentence-transformers) para soportar preguntas en español sobre corpus en inglés, retrieval balanceado por empresa para comparativas justas, y Gemini como generador con citas explícitas por índice [n] sobre el contexto recuperado."
+results: "Respuestas trazables con cita de empresa, página y sección. El cambio a embeddings multilingües resolvió el fallo de retrieval detectado con datos reales. El retrieval balanceado por empresa eliminó el sesgo que dejaba a una empresa sin representación en comparativas."
+repoUrl: "https://github.com/jmu809/RAG-Financiero-10k"
+demoUrl: ""
+coverImage: "/projects/rag-financiero-10k-cover.png"
+featured: true
+date: "2026-09-07"
+---
+
+## Contexto
+
+Los informes 10-K son el informe anual obligatorio que toda empresa cotizada en EE.UU. presenta ante la SEC: decenas o cientos de páginas de negocio, factores de riesgo y estados financieros. El objetivo era poder consultarlos por lenguaje natural con respuestas **siempre trazables a la página exacta del PDF de origen**.
+
+## Interfaz
+
+![Captura de la interfaz de chat del sistema RAG](/projects/rag-financiero-10k-cover.png)
+
+## Arquitectura
+
+```
+PDFs (data/raw/)
+   │  pypdf → texto por página
+   ▼
+Chunking (~650 tokens, overlap 100, por página)
+   │  + metadata: empresa, archivo, página, sección
+   ▼
+Embeddings locales (sentence-transformers, multilingüe)
+   ▼
+ChromaDB (persistente en disco)
+   │
+   │  pregunta del usuario → embeddings → similitud coseno (top-k)
+   ▼
+Prompt aumentado (fragmentos [1][2]... + metadata de cita)
+   ▼
+Gemini → respuesta con citas [n] + lista de fuentes
+   ▼
+Streamlit (app.py)
+```
+
+`src/ingest.py` (indexación) y `src/rag.py` (retrieval + generación) están deliberadamente separados de la interfaz: `app.py` es una capa de presentación fina, toda la lógica vive en `src/`. Esta separación permitió cambiar el LLM generador de Anthropic a Gemini a mitad de desarrollo tocando una sola función.
+
+## Decisiones técnicas con datos reales detrás
+
+**Chunking por página, no cruzando saltos**: cada chunk pertenece a una sola página del PDF, así la cita de página es siempre exacta. A cambio se pierde algo de contexto cuando una idea cruza un salto de página — trade-off aceptable para la trazabilidad.
+
+**Embeddings multilingües, con la causa medida**: la primera versión usaba `all-MiniLM-L6-v2` (solo inglés). Al probar con preguntas en español sobre un corpus en inglés, el retrieval fallaba: el chunk correcto quedaba fuera del top-k. Se midió la diferencia de distancias antes/después del cambio al modelo multilingüe y se verificó la mejora con los mismos ejemplos.
+
+**Retrieval balanceado por empresa**: sin filtro, una pregunta comparativa puede traer 3 fragmentos de una empresa y 0 de otra (reproducido con datos reales). Cuando el usuario selecciona varias empresas, `retrieve()` hace top-k por empresa y combina, en vez de fiarse del ranking global.
+
+**Citas explícitas en vez de la feature nativa del LLM**: como el retrieval ya determina el fragmento exacto (empresa/página/sección), se le pide al modelo que cite por índice `[n]` — más simple y 100% trazable a nuestra propia metadata.
+
+**Ingesta idempotente**: re-ejecutar `ingest.py` sobre un PDF ya indexado borra sus chunks previos por `source_file` antes de reinsertar, sin generar duplicados.
+
+**Heurística de sección con bug real encontrado**: el primer filtro (líneas con "....") se probó contra un 10-K real de Microsoft y falló porque ese filing no usa puntos de relleno en el índice. El filtro robusto que lo sustituyó se validó recorriendo las 156 páginas reales del documento.
+
+## Aprendizajes
+
+La parte más interesante no fue el pipeline RAG en sí, sino las decisiones de representación: qué metadata guardar en cada chunk para que las citas sean siempre verificables, y cómo garantizar que el retrieval sea justo cuando la pregunta involucra varias empresas. Cada una de esas decisiones se tomó después de ver el fallo con datos reales, no antes.
